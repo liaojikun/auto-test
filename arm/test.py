@@ -1,3 +1,4 @@
+import re
 import pytest
 import importlib
 import os
@@ -12,12 +13,42 @@ _CURRENT_TEST_DATA = {}
 # 用于存放 teardown 函数的任务队列 (堆栈)
 _TEARDOWN_STACK = []
 
+def tdata_update(data_segment):
+    """
+    显式更新当前用例的数据池。
+    虽然 Python 字典是引用传递，直接修改 find_tdata 返回的对象即可生效，
+    但提供此函数可以增加代码可读性，并预留未来持久化或日志监控的钩子。
+    """
+    # 实际上，由于 find_tdata 返回的是字典引用，直接修改 data['result'] = xxx 已经生效。
+    # 这里我们主要用于打印日志，确认数据流向。
+    print(f"[Engine] tdata_update: 数据段内容已同步至内存池")
+
 def find_tdata(key):
     """
-    全局查找函数：根据传入的字符串键（如 "step.account.login"），
-    从当前用例的数据块中获取对应的参数字典。
+    增强版数据查找函数：
+    1. 获取原始数据段。
+    2. 自动解析以 '!' 开头的 Key。
+    3. 支持 {path field} 语法从其他 Step 结果中取值。
     """
-    return _CURRENT_TEST_DATA.get(key, {})
+    data = _CURRENT_TEST_DATA.get(key, {})
+    
+    # 处理动态引用逻辑
+    # 遍历当前数据段的所有 key，查找是否有 ! 开头的
+    for k, v in list(data.items()):
+        if k.startswith("!") and isinstance(v, str):
+            # 正则解析 {path field}，例如 {step.account.user.step_login result}
+            match = re.search(r"{(.+)\s+(.+)}", v)
+            if match:
+                ref_path, ref_field = match.groups()
+                # 从 _CURRENT_TEST_DATA 全局池中根据路径找到目标值
+                ref_value = _CURRENT_TEST_DATA.get(ref_path, {}).get(ref_field)
+                
+                # 生成新的不带 ! 的 Key 并赋值
+                real_key = k[1:]
+                data[real_key] = ref_value
+                # print(f"[Engine] 动态解析: {k} -> 已获取 {ref_path} 的 {ref_field} = {ref_value}")
+                
+    return data
 
 # ==========================================
 # 主运行基类

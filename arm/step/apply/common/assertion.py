@@ -10,6 +10,7 @@ class Assertion(BaseStep):
         status = data.get("status_code")
         msg = data.get("message")
         print(f"[Step] expect: 验证预期: 状态码={status}, 消息={msg}")
+        assert "模拟登录结果数据" == data["result"]
         assert status == 401
         # 这里写断言逻辑...
     

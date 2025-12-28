@@ -153,6 +153,51 @@ class User:
 2.expect
 3.clear_login_data
 4.clear_expect_data
+==================================
+user.pyp
+class User(BaseStep):
+    def step_login(self, tdata_key):
+        # 核心：通过 key 获取自己的参数
+        data = find_tdata(tdata_key)
+        username = data.get("username")
+        password = data.get("password")
+        print(f"\n[Step] step_login: 正在登录: 用户名={username}, 密码={password}")
+        # 这里写实际请求逻辑...
+        data["result"] = "模拟登录结果数据"
+        tdata_update(data)
 
+        self.teardown(
+            lambda: self.clear_login_data()
+        )
+
+assertion.py
+class Assertion(BaseStep):
+    def expect(self, tdata_key):
+        self.teardown(
+            lambda: self.clear_expect_data()
+        )
+        data = find_tdata(tdata_key)
+        status = data.get("status_code")
+        msg = data.get("message")
+        print(f"[Step] expect: 验证预期: 状态码={status}, 消息={msg}")
+        assert "模拟预期结果数据" == data["result"]
+        assert status == 401
+        # 这里写断言逻辑...
+
+tdata_login.py  
+tdata_login_fail_0001 = {
+    "step.account.user.step_login": {
+        "username": "wrong_user",
+        "password": "wrong_pass",
+    },
+    "step.common.assertion.expect": {
+        "!result": "{step.account.user.step_login result}",
+        "status_code": 401,
+        "message": "用户名或密码错误"
+    }
+
+我期望再实现一个tdata_update功能，更新tdata里的数据，
+find_tdata获取数据时如果tdata_login.py里有!开头的key，就更新对应的数据，
+例如"!result": "{step.account.user.step_login result}"，就在tdata_login_fail_0001里取step.account.user.step_login里的result字段
 """
 

@@ -1,4 +1,4 @@
-from arm.test import find_tdata
+from arm.test import find_tdata, tdata_update
 from arm.step.base_step import BaseStep
 
 class User(BaseStep):
@@ -9,6 +9,9 @@ class User(BaseStep):
         password = data.get("password")
         print(f"\n[Step] step_login: 正在登录: 用户名={username}, 密码={password}")
         # 这里写实际请求逻辑...
+        data["result"] = "模拟登录结果数据"
+        tdata_update(data)
+
         self.teardown(
             lambda: self.clear_login_data()
         )
