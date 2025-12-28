@@ -32,6 +32,71 @@ tdata_login_fail_0003 = {}
 def login(tdata=None):
     data = find_tdata(tdata)
     # 执行登录逻辑 ....
+
+
+
+project/
+├── base_runner.py
+├── steps.py
+└── case/
+    └── account/
+        ├── test_login.py
+        └── tdata_login.py
+
+我的目录结构如下：       
+│  .gitignore
+│  config
+│
+├─.vscode
+│      settings.json
+│
+├─apply
+└─arm
+    │  test.py
+    │  __init__.py
+    │
+    ├─case
+    │  │  __init__.py
+    │  │
+    │  ├─account
+    │  │  │  tdata_login.py
+    │  │  │  test_login.py
+    │  └─ └─ __init__.py
+    │
+    ├─step
+    │  │  steps.py
+    │  │  __init__.py
+    │  │
+    │  ├─apply
+    │  │  │  __init__.py
+    │  │  │
+    │  │  ├─account
+    │  │  │      user.py
+    │  │  │      __init__.py
+    │  │  │
+    │  │  └─order
+    └─ └─__pycache__
+
     
+user.py里的内容如下：
+from arm.test import find_tdata
+class User:
+    def login(self, tdata_key):
+        # 核心：通过 key 获取自己的参数
+        data = find_tdata(tdata_key)
+        username = data.get("username")
+        password = data.get("password")
+        print(f"\n[Step] 正在登录: 用户名={username}, 密码={password}")
+        # 这里写实际请求逻辑...
+
+test_login.py里的内容如下：期望通过self.apply_step.account.user.step_login()这样的方式调用
+class TestLogin(BaseRunner):
+    apply_step = Apply()
+    
+    def test_login_fail_0001(self):
+        # 1. 登录失败测试
+        self.apply_step.account.user.step_login("step.account.login")
+        # step.common.expect("step.common.expect")
+如果想要实现这一的效果，init.py里需要怎么做
 """
 
