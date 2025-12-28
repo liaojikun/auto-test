@@ -98,5 +98,61 @@ class TestLogin(BaseRunner):
         self.apply_step.account.user.step_login("step.account.login")
         # step.common.expect("step.common.expect")
 如果想要实现这一的效果，init.py里需要怎么做
+
+=========================================
+test_login.py
+from arm.test import BaseRunner
+from arm.step.apply import Apply
+
+class TestLogin(BaseRunner):
+    apply_step = Apply()
+    
+    def test_login_fail_0001(self):
+        # 1. 登录失败测试
+        self.apply_step.account.user.step_login("step.account.login")
+        self.apply_step.common.assertion.expect("step.common.expect")
+
+user.py
+class Assertion:
+    def expect(self, tdata_key):
+        data = find_tdata(tdata_key)
+        status = data.get("status_code")
+        msg = data.get("message")
+        print(f"[Step] 验证预期: 状态码={status}, 消息={msg}")
+        assert status == 401
+        # 这里写断言逻辑...
+
+        self.teardown(
+            lambda: self.clear_expect_data()
+        )
+    
+    def clear_expect_data(self):
+        print("\n[Step] 清理预期数据...")
+        # 这里写实际清理逻辑...
+
+assertion.py
+class User:
+    def step_login(self, tdata_key):
+        # 核心：通过 key 获取自己的参数
+        data = find_tdata(tdata_key)
+        username = data.get("username")
+        password = data.get("password")
+        print(f"\n[Step] 正在登录: 用户名={username}, 密码={password}")
+        # 这里写实际请求逻辑...
+        self.teardown(
+            lambda: self.clear_login_data()
+        )
+    
+    def clear_login_data(self):
+        print("\n[Step] 清理登录数据...")
+        # 这里写实际清理逻辑...
+
+期望test.py里实现一个teardown功能，已堆栈的方式加入所需要的执行函数。等待本条用例执行完后根据堆栈顺序执行teardown里的函数
+例如test_login_fail_0001执行顺序：
+1.step_login
+2.expect
+3.clear_login_data
+4.clear_expect_data
+
 """
 
