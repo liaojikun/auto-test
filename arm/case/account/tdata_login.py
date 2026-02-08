@@ -17,7 +17,7 @@ tdata_login_fail_0002 = {
     },
     "step.common.expect": {
         "result": "模拟登录结果数据",
-        "status_code": 403,
+        "status_code": 401,
         "message": "账号已冻结"
     }
 }
